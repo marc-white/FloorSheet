@@ -1,0 +1,100 @@
+{% load staticfiles %}
+<html>
+
+<head>
+    <title>Floorball Scoresheet Generator</title>
+
+    <script src="{% static 'scoresheet_generator/js/jquery-3.3.1.min.js' %}"></script>
+<!--    <script src="/admin/jsi18n/"></script>-->
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="{% static 'bootstrap-3.3.7-dist/css/bootstrap.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'bootstrap-3.3.7-dist/css/bootstrap-theme.min.css' %}" />
+    <script src="{% static 'bootstrap-3.3.7-dist/js/bootstrap.min.js' %}" ></script>
+</head>
+
+<body style="padding: 10px;">
+<h1 style="text-align: center;">Floorball Scoresheet Generator</h1>
+<h4 style="text-align: center;">Generate up to six scoresheets at once, complete with team rosters, duty team, and game information.</h4>
+
+{{ ss_formset.media }}
+
+<form action="" class="form-horizontal" method="POST">
+    {{ ss_formset.management_form }}
+    {% csrf_token %}
+    <button class="btn btn-success" type="submit">Create scoresheet(s)</button>
+
+    {% for form in ss_formset %}
+    <hr />
+        <table style="margin-top: 10px; margin-bottom: 15px;" class="form-row">
+        {{ form.as_table }}
+<!--            <tr class="input-group-append"><td><button class="btn btn-primary add-form-row" name="add-form-row-0">Add another game</button><br /><br /></td></tr>-->
+        </table>
+    {% endfor %}
+    <hr />
+    <button class="btn btn-success" type="submit">Create scoresheet(s)</button>
+</form>
+
+<!--<script type="text/javascript">-->
+<!--  $(function(){-->
+<!--    $(".dateinput").datetimepicker();-->
+<!--  });-->
+<!--</script>-->
+
+<!--<script type='text/javascript'>-->
+<!--function updateElementIndex(el, prefix, ndx) {-->
+<!--    var id_regex = new RegExp('(' + prefix + '-\\d+)');-->
+<!--    var replacement = prefix + '-' + ndx;-->
+<!--    if ($(el).attr("for")) $(el).attr("for", $(el).attr("for").replace(id_regex, replacement));-->
+<!--    if (el.id) el.id = el.id.replace(id_regex, replacement);-->
+<!--    if (el.name) el.name = el.name.replace(id_regex, replacement);-->
+<!--}-->
+<!--function cloneMore(selector, prefix) {-->
+<!--    var newElement = $(selector).clone(true);-->
+<!--    var total = $('#id_' + prefix + '-TOTAL_FORMS').val();-->
+<!--    newElement.find(':input').each(function() {-->
+<!--        console.log($(this));-->
+<!--        var name = $(this).attr('name').replace('-' + (total-1) + '-', '-' + total + '-');-->
+<!--        var id = 'id_' + name;-->
+<!--        $(this).attr({'name': name, 'id': id}).val('').removeAttr('checked');-->
+<!--    });-->
+<!--    total++;-->
+<!--    $('#id_' + prefix + '-TOTAL_FORMS').val(total);-->
+<!--    $(selector).after(newElement);-->
+<!--    var conditionRow = $('.form-row:not(:last)');-->
+<!--    conditionRow.find('.btn.add-form-row')-->
+<!--    .removeClass('btn-success').addClass('btn-danger')-->
+<!--    .removeClass('add-form-row').addClass('remove-form-row')-->
+<!--    .html('Remove this game');-->
+<!--    return false;-->
+<!--}-->
+<!--function deleteForm(prefix, btn) {-->
+<!--    var total = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());-->
+<!--    if (total > 1){-->
+<!--        btn.closest('.form-row').remove();-->
+<!--        var forms = $('.form-row');-->
+<!--        $('#id_' + prefix + '-TOTAL_FORMS').val(forms.length);-->
+<!--        for (var i=0, formCount=forms.length; i<formCount; i++) {-->
+<!--            $(forms.get(i)).find(':input').each(function() {-->
+<!--                updateElementIndex(this, prefix, i);-->
+<!--            });-->
+<!--        }-->
+<!--    }-->
+<!--    return false;-->
+<!--}-->
+<!--$(document).on('click', '.add-form-row', function(e){-->
+<!--    console.log('Add form row button clicked');-->
+<!--    e.preventDefault();-->
+<!--    cloneMore('.form-row:last', 'form');-->
+<!--    return false;-->
+<!--});-->
+<!--$(document).on('click', '.remove-form-row', function(e){-->
+<!--    e.preventDefault();-->
+<!--    deleteForm('form', $(this));-->
+<!--    return false;-->
+<!--});-->
+<!--</script>-->
+
+</body>
+
+</html>
