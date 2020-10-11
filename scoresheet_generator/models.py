@@ -3,6 +3,12 @@ from __future__ import unicode_literals
 
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.files.storage import DefaultStorage
+from django.core.exceptions import ValidationError
+
+import writer
+import csv
+import codecs
 
 # Create your models here.
 
@@ -19,6 +25,17 @@ ROLES = (
     ('S', 'Team staff'),
 )
 
+STAFF_ROLE_KEY = 'sSmM'
+CAPTAIN_ROLE_KEY = 'cC'
+GOALIE_ROLE_KEY = 'gG'
+
+
+def try_int_or_other(x, other=None):
+    try:
+        return int(x)
+    except ValueError:
+        return other
+
 
 class Team(models.Model):
 
@@ -30,8 +47,81 @@ class Team(models.Model):
                                  unique=False)
     team_list = models.FileField(blank=True)
 
+    def __init__(self, *args, **kwargs):
+        super(Team, self).__init__(*args, **kwargs)
+        self._original_team_list = self.team_list.name
+
     def __unicode__(self):
         return '{}'.format(self.team_name, )
+
+    def parse_team_list(self):
+        """
+        Parse the CSV team list
+        :return:
+        """
+        if self.team_list.name == '':
+            return {}
+
+        # Open up a CSV reader
+        storage = DefaultStorage()
+        with storage.open(self.team_list.name, mode='r') as team_list:
+            reader = csv.DictReader(codecs.EncodedFile(team_list, 'utf-8', 'utf-8-sig'),
+                                    # team_list,
+                                    fieldnames=(
+                                        'role', 'number', 'name',
+                                        'birthday',
+                                    ))
+            rows = [row for row in reader]
+
+        data_dict = {}
+
+        print(rows)
+
+        data_dict['players'] = [row for row in rows
+                                if not any([_ in row['role'] for _ in STAFF_ROLE_KEY])][:20]
+        data_dict['players'].sort(key=lambda x: try_int_or_other(x['number'], 0))
+
+        data_dict['staff'] = [row for row in rows
+                              if any([_ in row['role'] for _ in STAFF_ROLE_KEY])][:5]
+        data_dict['staff'].sort(key=lambda x: try_int_or_other(x['number'], 0))
+
+        return data_dict
+
+    def update_players(self):
+        data_dict = self.parse_team_list()
+        if len(data_dict) == 0:
+            return
+        for player in data_dict['players']:
+            player_obj = Player(
+                name=player['name'],
+                number=try_int_or_other(player['number'], None),
+                team=self,
+                is_captain=any([_ in player['role'] for _ in CAPTAIN_ROLE_KEY]),
+                is_goalie=any([_ in player['role'] for _ in GOALIE_ROLE_KEY]),
+                # is_captain=CAPTAIN_ROLE_KEY in player['role'],
+                # is_goalie=GOALIE_ROLE_KEY in player['role'],
+                is_staff=False,
+            )
+            player_obj.save()
+        for player in data_dict['staff']:
+            player_obj = Player(
+                name=player['name'],
+                number=try_int_or_other(player['number'], None),
+                team=self,
+                is_captain=False,
+                is_goalie=False,
+                is_staff=True,
+            )
+            player_obj.save()
+
+    def save(self, *args, **kwargs):
+        super(Team, self).save(*args, **kwargs)
+        if self.team_list.name != self._original_team_list and len(self.team_list.name) > 0:
+            # Blow away existing Players for this team
+            players = Player.objects.filter(team=self)
+            players.delete()
+            # Re-populate Players from the CSV team list
+            self.update_players()
 
 
 class Player(models.Model):
@@ -43,9 +133,12 @@ class Player(models.Model):
     name = models.CharField(max_length=300, blank=False, unique=False)
     number = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(99)],
-        blank=True
+        blank=True,
+        null=True
     )
-    role = models.CharField(max_length=1, choices=ROLES, blank=True)
+    is_captain = models.BooleanField(default=False)
+    is_goalie = models.BooleanField(default=False)
+    is_staff = models.BooleanField(default=False)
     team = models.ForeignKey(Team)
 
     def __unicode__(self):
@@ -54,6 +147,11 @@ class Player(models.Model):
             self.name,
             self.team.team_name,
         )
+
+    def clean(self):
+        if self.is_staff and (self.is_captain or self.is_goalie):
+            raise ValidationError('Team staff cannot be a captain '
+                                  'or goalkeeper.')
 
 
 class Competition(models.Model):
