@@ -30,42 +30,38 @@ def try_int_or_zero(x):
 
 def parse_team_list(team_obj):
     """
-    Parse a team CSV list into a dict to be written to PDF
+    Parse a team player list into a dict to be written to PDF
     """
-    # No-op if no team list available
-    if team_obj.team_list.name == '':
+    players = team_obj.player_set.filter(
+        is_staff=False
+    ).order_by(
+        'number', 'name'
+    )
+    staff = team_obj.player_set.filter(
+        is_staff=True
+    ).order_by(
+        'number', 'name'
+    )
+    # No-op if no players on team
+    if players.count() == 0 and staff.count() == 0:
         return {}
 
-    # Open up a CSV reader
-    storage = DefaultStorage()
-    with storage.open(team_obj.team_list.name, mode='r') as team_list:
-        reader = csv.DictReader(team_list,
-                                fieldnames=(
-                                    'role', 'number', 'name', 'birthday',
-                                ))
-        rows = [row for row in reader]
-
-    data_dict = {}
-
     # Build and write back a player list and staff list
-    players = [row for row in rows
-               if not any([_ in row['role'] for _ in STAFF_ROLE_KEY])][:20]
-    players.sort(key=lambda x: try_int_or_zero(x['number']))
-    for i, row in enumerate(players):
-        no = '{:02d}'.format(i+1)
-        data_dict['PlayerGC{}'.format(no)] = ''.join([
-            _ for _ in row['role'] if _ in STAFF_ROLE_KEY+CAPTAIN_ROLE_KEY+GOALIE_ROLE_KEY
-        ])
-        data_dict['PlayerNo{}'.format(no)] = row['number']
-        data_dict['PlayerName{}'.format(no)] = row['name']
-        data_dict['PlayerDOB{}'.format(no)] = row['birthday']
+    data_dict = {}
+    for i, player in enumerate(players[:20]):
+        no = '{:02d}'.format(i + 1)
+        data_dict['PlayerGC{}'.format(no)] = ''
+        if player.is_captain: data_dict['PlayerGC{}'.format(no)] += 'C'
+        if player.is_goalie: data_dict['PlayerGC{}'.format(no)] += 'G'
+        data_dict['PlayerNo{}'.format(no)] = str(player.number) or ''
+        data_dict['PlayerName{}'.format(no)] = player.name
+        data_dict[
+            'PlayerDOB{}'.format(no)
+        ] = player.dob.strftime('%d/%m/%y') if player.dob else ''
 
-    staff = [row for row in rows
-               if any([_ in row['role'] for _ in STAFF_ROLE_KEY])][:5]
-    staff.sort(key=lambda x: x['number'])
-    for i, row in enumerate(staff):
-        no = '{:1d}'.format(i+1)
-        data_dict['Off{}'.format(no)] = row['name']
+    for i, player in enumerate(staff):
+        no = '{:1d}'.format(i + 1)
+        data_dict['Off{}'.format(no)] = player['name']
 
     return data_dict
 
@@ -110,7 +106,12 @@ def create_scoresheet(template, *args, **kwargs):
             continue
 
         # Write in the team name
-        data_dict['{}TeamName'.format(team_field_code)] = team_obj.team_name
+        data_dict[
+            '{}TeamName'.format(team_field_code)
+        ] = "{}{}".format(
+            team_obj.team_name,
+            " ({})".format(team_obj.color) if team_obj.color else "",
+        )
 
         # Add in the player/staff list
         data_dict.update(

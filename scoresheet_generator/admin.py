@@ -8,9 +8,12 @@ from . import models
 
 # admin.site.register(models.Team)
 admin.site.register(models.Competition)
-admin.site.register(models.Division)
 admin.site.register(models.Venue)
 
+class DivisionAdmin(admin.ModelAdmin):
+    model = models.Division
+    filter_horizontal = ('teams',)
+admin.site.register(models.Division, DivisionAdmin)
 
 class PlayerInline(admin.TabularInline):
     model = models.Player

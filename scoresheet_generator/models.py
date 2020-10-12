@@ -9,6 +9,7 @@ from django.core.exceptions import ValidationError
 import writer
 import csv
 import codecs
+import datetime
 
 # Create your models here.
 
@@ -29,12 +30,35 @@ STAFF_ROLE_KEY = 'sSmM'
 CAPTAIN_ROLE_KEY = 'cC'
 GOALIE_ROLE_KEY = 'gG'
 
+_DATE_ORDERS = [
+    ["%d", "%m", "%y"],
+    ["%d", "%m", "%Y"],
+    ["%y", "%m", "%d"],
+    ["%Y", "%m", "%d"],
+]
+_DATE_SEPS = ["-", "/", ]
+
+DATE_FORMATS = []
+for sep in _DATE_SEPS:
+    for order in _DATE_ORDERS:
+        DATE_FORMATS.append(sep.join(order))
+
+
 
 def try_int_or_other(x, other=None):
     try:
         return int(x)
     except ValueError:
         return other
+
+
+def parse_date(date_str):
+    for fmt in DATE_FORMATS:
+        try:
+            return datetime.datetime.strptime(date_str, fmt)
+        except:
+            pass
+    return None
 
 
 class Team(models.Model):
@@ -45,6 +69,7 @@ class Team(models.Model):
     # Model fields
     team_name = models.CharField(max_length=100, blank=False,
                                  unique=False)
+    color = models.CharField(max_length=30, blank=True)
     team_list = models.FileField(blank=True)
 
     def __init__(self, *args, **kwargs):
@@ -96,10 +121,9 @@ class Team(models.Model):
                 name=player['name'],
                 number=try_int_or_other(player['number'], None),
                 team=self,
+                dob=parse_date(player['birthday']),
                 is_captain=any([_ in player['role'] for _ in CAPTAIN_ROLE_KEY]),
                 is_goalie=any([_ in player['role'] for _ in GOALIE_ROLE_KEY]),
-                # is_captain=CAPTAIN_ROLE_KEY in player['role'],
-                # is_goalie=GOALIE_ROLE_KEY in player['role'],
                 is_staff=False,
             )
             player_obj.save()
@@ -136,6 +160,7 @@ class Player(models.Model):
         blank=True,
         null=True
     )
+    dob = models.DateField(blank=True, null=True)
     is_captain = models.BooleanField(default=False)
     is_goalie = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
