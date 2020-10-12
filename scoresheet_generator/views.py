@@ -7,7 +7,7 @@ import subprocess
 from django.shortcuts import render
 from . import forms, writer
 from django.forms import formset_factory
-from django.contrib.staticfiles.templatetags.staticfiles import static
+from django.contrib.staticfiles import finders
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.shortcuts import redirect
@@ -21,10 +21,9 @@ from django.conf import settings
 
 
 def generate(request):
-    template_path = os.path.join(settings.STATIC_ROOT,
-                                            'scoresheet_generator/pdf/'
-                                            'IFF-Match-Record-2010-Form-MVP3'
-                                            '.pdf')
+    template_path = finders.find('scoresheet_generator/pdf/'
+                                 'IFF-Match-Record-2010-Form-MVP3'
+                                 '.pdf')
     ss_formset = formset_factory(forms.ScoresheetGeneratorForm, extra=5)
 
     if request.method == 'POST':
@@ -34,10 +33,7 @@ def generate(request):
             for form in ss_formset:
                 if form.is_valid() and form.has_changed():
                     template = writer.create_scoresheet(
-                        os.path.join(settings.STATIC_ROOT,
-                                            'scoresheet_generator/pdf/'
-                                            'IFF-Match-Record-2010-Form-MVP3'
-                                            '.pdf'),
+                        template_path,
                         comp=form.cleaned_data.get('comp'),
                         start_time=form.cleaned_data.get('start_time'),
                         match_id=form.cleaned_data.get('match_id'),
