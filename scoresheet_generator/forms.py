@@ -25,7 +25,9 @@ class JQueryUIDatepickerWidget(forms.DateInput):
 class ScoresheetGeneratorForm(forms.Form):
 
     # Define form fields
-    comp = forms.ModelChoiceField(queryset=models.Competition.objects.all(),
+    comp = forms.ModelChoiceField(queryset=models.Division.objects.filter(
+                                     active=True
+                                  ),
                                   # initial=models.Competition.objects.first(),
                                   required=False,
                                   label='Competition')

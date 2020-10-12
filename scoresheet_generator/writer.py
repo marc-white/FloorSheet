@@ -84,8 +84,11 @@ def create_scoresheet(template, *args, **kwargs):
     if kwargs.get('assoc'):
         pass
     if kwargs.get('comp'):
-        data_dict['Competition'] = kwargs['comp'].comp
-        data_dict['Association'] = kwargs['comp'].assoc
+        data_dict['Competition'] = "{} {}".format(
+            kwargs['comp'].comp.comp,
+            kwargs['comp'].get_div_display(),
+        )
+        data_dict['Association'] = kwargs['comp'].comp.assoc
     if kwargs.get('venue'):
         data_dict['Venue'] = kwargs['venue']
     if kwargs.get('match_id'):
@@ -97,7 +100,7 @@ def create_scoresheet(template, *args, **kwargs):
         data_dict['MatchSecName'] = '[{}]'.format(
             kwargs['duty_team'].__unicode__(),
         )
-    print('- create_scoresheet: Added basic team info')
+    # print('- create_scoresheet: Added basic team info')
 
     for team in ['home', 'away']:
         team_field_code = team.capitalize()
@@ -110,7 +113,7 @@ def create_scoresheet(template, *args, **kwargs):
             '{}TeamName'.format(team_field_code)
         ] = "{}{}".format(
             team_obj.team_name,
-            " ({})".format(team_obj.color) if team_obj.color else "",
+            " ({})".format(team_obj.color.capitalize()) if team_obj.color else "",
         )
 
         # Add in the player/staff list
@@ -118,8 +121,8 @@ def create_scoresheet(template, *args, **kwargs):
             {'{}{}'.format(team_field_code, k): v
              for k, v in parse_team_list(team_obj).items()}
         )
-    print('- create_scoresheet: Added team lists')
-    print('- create_scoresheet: Final data_dict is...\n{}\n'.format(data_dict))
+    # print('- create_scoresheet: Added team lists')
+    # print('- create_scoresheet: Final data_dict is...\n{}\n'.format(data_dict))
 
     # return data_dict
 
@@ -133,7 +136,7 @@ def create_scoresheet(template, *args, **kwargs):
             if annotation[ANNOT_FIELD_KEY]:
                 key = annotation[ANNOT_FIELD_KEY][1:-1]
                 if key in data_dict.keys():
-                    print('- create_scoresheet: Adding key {}'.format(key))
+                    # print('- create_scoresheet: Adding key {}'.format(key))
                     annotation.update(
                         pdfrw.PdfDict(V='{}'.format(data_dict[key]))
                     )
