@@ -40,6 +40,7 @@ def generate(request):
                         home_team=form.cleaned_data.get('home_team'),
                         away_team=form.cleaned_data.get('away_team'),
                         duty_team=form.cleaned_data.get('duty_team'),
+                        venue=form.cleaned_data.get('venue'),
                     )
                     p = os.path.join(
                         settings.MEDIA_ROOT,

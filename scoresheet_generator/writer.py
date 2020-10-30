@@ -53,7 +53,10 @@ def parse_team_list(team_obj):
         data_dict['PlayerGC{}'.format(no)] = ''
         if player.is_captain: data_dict['PlayerGC{}'.format(no)] += 'C'
         if player.is_goalie: data_dict['PlayerGC{}'.format(no)] += 'G'
-        data_dict['PlayerNo{}'.format(no)] = str(player.number) or ''
+        if player.number is not None:
+            data_dict['PlayerNo{}'.format(no)] = str(player.number) or ''
+        else:
+            data_dict['PlayerNo{}'.format(no)] = ''
         data_dict['PlayerName{}'.format(no)] = player.name
         data_dict[
             'PlayerDOB{}'.format(no)
@@ -79,6 +82,8 @@ def create_scoresheet(template, *args, **kwargs):
 
     # Build a data-dict from the input kwargs
     data_dict = {}
+
+    print(kwargs)
 
     # Single input things
     if kwargs.get('assoc'):
