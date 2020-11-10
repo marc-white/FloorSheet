@@ -152,6 +152,7 @@ class Player(models.Model):
 
     class Meta:
         unique_together = ('team', 'number', )
+        ordering = ('team', 'number', 'is_goalie', 'is_captain', 'name', )
 
     # Model fields
     name = models.CharField(max_length=300, blank=False, unique=False)
