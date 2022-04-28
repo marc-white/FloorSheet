@@ -151,7 +151,7 @@ class Team(models.Model):
 class Player(models.Model):
 
     class Meta:
-        unique_together = ('team', 'number', )
+        # unique_together = ('team', 'number', )
         ordering = ('team', 'number', 'is_goalie', 'is_captain', 'name', )
 
     # Model fields
@@ -178,6 +178,15 @@ class Player(models.Model):
         if self.is_staff and (self.is_captain or self.is_goalie):
             raise ValidationError('Team staff cannot be a captain '
                                   'or goalkeeper.')
+
+    def validate_unique(self, exclude=None):
+        if self.number is not None:
+            if Player.objects.exclude(id=self.id).filter(
+                    number=self.number, team=self.team
+            ).exists():
+                raise ValidationError(
+                    'This team already has a player #{}'.format(self.number))
+        super(Player, self).validate_unique(exclude=exclude)
 
 
 class Competition(models.Model):

@@ -3,6 +3,9 @@ from . import models
 
 from datetimewidget.widgets import DateTimeWidget
 
+class TeamColorChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return '{} ({})'.format(obj.team_name, obj.color)
 
 class JQueryUIDatepickerWidget(forms.DateInput):
     def __init__(self, **kwargs):
@@ -42,13 +45,13 @@ class ScoresheetGeneratorForm(forms.Form):
                                    required=False)
     match_id = forms.CharField(max_length=30, required=False, label='Match ID')
 
-    home_team = forms.ModelChoiceField(queryset=models.Team.objects.all(),
-                                       required=True, initial=None)
-    away_team = forms.ModelChoiceField(queryset=models.Team.objects.all(),
-                                       required=True, initial=None)
-    duty_team = forms.ModelChoiceField(queryset=models.Team.objects.all(),
-                                       required=False, initial=None,
-                                       help_text="Define if a team is "
-                                                 "assigned to duty")
+    home_team = TeamColorChoiceField(queryset=models.Team.objects.all(),
+                                     required=True, initial=None)
+    away_team = TeamColorChoiceField(queryset=models.Team.objects.all(),
+                                     required=True, initial=None)
+    duty_team = TeamColorChoiceField(queryset=models.Team.objects.all(),
+                                     required=False, initial=None,
+                                     help_text="Define if a team is "
+                                               "assigned to duty")
 
 

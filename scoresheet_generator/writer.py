@@ -102,8 +102,10 @@ def create_scoresheet(template, *args, **kwargs):
         data_dict['Date'] = kwargs['start_time'].strftime('%d %b %Y')
         data_dict['StartTime'] = kwargs['start_time'].strftime('%H:%M')
     if kwargs.get('duty_team'):
-        data_dict['MatchSecName'] = '[{}]'.format(
+        data_dict['MatchSecName'] = '[{}{}]'.format(
             kwargs['duty_team'].__unicode__(),
+            " ({})".format(
+                kwargs['duty_team'].color.capitalize()) if kwargs['duty_team'].color else "",
         )
     # print('- create_scoresheet: Added basic team info')
 
