@@ -22,7 +22,7 @@ from django.conf import settings
 
 def generate(request):
     template_path = finders.find('scoresheet_generator/pdf/'
-                                 'IFF-Match-Record-2010-Form-MVP3'
+                                 'IFF-Match-Record-2022-Temp-Form-MVP3'
                                  '.pdf')
     ss_formset = formset_factory(forms.ScoresheetGeneratorForm, extra=5)
 
