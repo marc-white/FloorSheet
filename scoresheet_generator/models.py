@@ -18,6 +18,7 @@ DIVISIONS = (
     ('w', 'Women'),
     ('1', 'Division 1'),
     ('2', 'Division 2'),
+    ('a', 'All-in'),
 )
 
 ROLES = (
