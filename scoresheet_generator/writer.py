@@ -21,6 +21,10 @@ STAFF_ROLE_KEY = 'sSmM'
 CAPTAIN_ROLE_KEY = 'cC'
 GOALIE_ROLE_KEY = 'gG'
 
+DATE_DISPLAY_FORMAT = "%d %b %Y"
+TIME_DISPLAY_FORMAT = "%H:%M"
+DATE_DISPLAY_FORMAT_PLAYER = "%d/%m/%y"
+
 def try_int_or_zero(x):
     try:
         return int(x)
@@ -60,7 +64,7 @@ def parse_team_list(team_obj):
         data_dict['PlayerName{}'.format(no)] = player.name
         data_dict[
             'PlayerDOB{}'.format(no)
-        ] = player.dob.strftime('%d/%m/%y') if player.dob else ''
+        ] = player.dob.strftime(DATE_DISPLAY_FORMAT_PLAYER) if player.dob else ''
 
     for i, player in enumerate(staff):
         no = '{:1d}'.format(i + 1)
@@ -99,8 +103,8 @@ def create_scoresheet_data(*args, **kwargs):
     if kwargs.get('match_id'):
         data_dict['MatchNo'] = kwargs['match_id']
     if kwargs.get('start_time'):
-        data_dict['Date'] = kwargs['start_time'].strftime('%d %b %Y')
-        data_dict['StartTime'] = kwargs['start_time'].strftime('%H:%M')
+        data_dict['Date'] = kwargs['start_time'].strftime(DATE_DISPLAY_FORMAT)
+        data_dict['StartTime'] = kwargs['start_time'].strftime(TIME_DISPLAY_FORMAT)
     if kwargs.get('duty_team'):
         data_dict['MatchSecName'] = '[{}{}]'.format(
             kwargs['duty_team'].__str__(),
