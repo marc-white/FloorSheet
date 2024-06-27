@@ -32,7 +32,7 @@ def generate(request):
             pdfs = []
             for form in ss_formset:
                 if form.is_valid() and form.has_changed():
-                    template = writer.create_scoresheet(
+                    template = writer.create_scoresheet_pdf(
                         template_path,
                         comp=form.cleaned_data.get('comp'),
                         start_time=form.cleaned_data.get('start_time'),

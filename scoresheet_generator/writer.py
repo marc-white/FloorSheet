@@ -69,7 +69,7 @@ def parse_team_list(team_obj):
     return data_dict
 
 
-def create_scoresheet(template, *args, **kwargs):
+def create_scoresheet_data(*args, **kwargs):
     """
     Start filling out a floorball scoresheet, based on a passed info
 
@@ -131,7 +131,10 @@ def create_scoresheet(template, *args, **kwargs):
     # print('- create_scoresheet: Added team lists')
     # print('- create_scoresheet: Final data_dict is...\n{}\n'.format(data_dict))
 
-    # return data_dict
+    return data_dict
+
+def create_scoresheet_pdf(template, *args, **kwargs):
+    data_dict = create_scoresheet_data(*args, **kwargs)
 
     # Open up the template form
     template_pdf = pdfrw.PdfReader(template)
