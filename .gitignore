@@ -1,1 +1,10 @@
 /scoresheet_generator/migrations/
+/media
+/static
+/.idea
+*.pyc
+*.sqlite3
+*.code-workspace
+*.tar.gz
+/testdata
+.DS_Store
