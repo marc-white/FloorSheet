@@ -1,14 +1,14 @@
 # Module that creates the scoresheet
 
-import csv
-import os
+# import csv
+# import os
 import pdfrw
-import subprocess
+# import subprocess
 
 from django.conf import settings
-from django.core.files.storage import DefaultStorage
+# from django.core.files.storage import DefaultStorage
 
-from fdfgen import forge_fdf
+# from fdfgen import forge_fdf
 
 ANNOT_KEY = '/Annots'
 ANNOT_FIELD_KEY = '/T'
@@ -103,7 +103,7 @@ def create_scoresheet(template, *args, **kwargs):
         data_dict['StartTime'] = kwargs['start_time'].strftime('%H:%M')
     if kwargs.get('duty_team'):
         data_dict['MatchSecName'] = '[{}{}]'.format(
-            kwargs['duty_team'].__unicode__(),
+            kwargs['duty_team'].__str__(),
             " ({})".format(
                 kwargs['duty_team'].color.capitalize()) if kwargs['duty_team'].color else "",
         )
@@ -126,7 +126,7 @@ def create_scoresheet(template, *args, **kwargs):
         # Add in the player/staff list
         data_dict.update(
             {'{}{}'.format(team_field_code, k): v
-             for k, v in parse_team_list(team_obj).items()}
+             for k, v in list(parse_team_list(team_obj).items())}
         )
     # print('- create_scoresheet: Added team lists')
     # print('- create_scoresheet: Final data_dict is...\n{}\n'.format(data_dict))
@@ -142,7 +142,7 @@ def create_scoresheet(template, *args, **kwargs):
         if annotation[SUBTYPE_KEY] == WIDGET_SUBTYPE_KEY:
             if annotation[ANNOT_FIELD_KEY]:
                 key = annotation[ANNOT_FIELD_KEY][1:-1]
-                if key in data_dict.keys():
+                if key in list(data_dict.keys()):
                     # print('- create_scoresheet: Adding key {}'.format(key))
                     annotation.update(
                         pdfrw.PdfDict(V='{}'.format(data_dict[key]))

@@ -1,7 +1,7 @@
 from django import forms
 from . import models
 
-from datetimewidget.widgets import DateTimeWidget
+# from datetimewidget.widgets import DateTimeWidget
 
 class TeamColorChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
@@ -35,10 +35,10 @@ class ScoresheetGeneratorForm(forms.Form):
                                   required=False,
                                   label='Competition')
     start_time = forms.DateTimeField(required=True,
-                                     widget=DateTimeWidget(
-                                         options={
-                                             'format': 'yyyy-mm-dd hh:ii',
-                                         }
+                                     widget=forms.widgets.DateTimeInput(
+                                        #  options={
+                                        #      'format': 'yyyy-mm-dd hh:ii',
+                                        #  }
                                      ))
     venue = forms.ModelChoiceField(queryset=models.Venue.objects.all(),
                                    # initial=models.Venue.objects.first(),

@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.files.storage import DefaultStorage
 from django.core.exceptions import ValidationError
 
-import writer
+# from . import writer
 import csv
 import codecs
 import datetime
@@ -77,7 +77,7 @@ class Team(models.Model):
         super(Team, self).__init__(*args, **kwargs)
         self._original_team_list = self.team_list.name
 
-    def __unicode__(self):
+    def __str__(self):
         return '{}'.format(self.team_name, )
 
     def parse_team_list(self):
@@ -166,9 +166,9 @@ class Player(models.Model):
     is_captain = models.BooleanField(default=False)
     is_goalie = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
-    team = models.ForeignKey(Team)
+    team = models.ForeignKey(Team, on_delete=models.DO_NOTHING)
 
-    def __unicode__(self):
+    def __str__(self):
         return '#{}. {} ({})'.format(
             self.number,
             self.name,
@@ -197,7 +197,7 @@ class Competition(models.Model):
     comp = models.CharField(max_length=200, blank=False,
                             help_text='Competition name')
 
-    def __unicode__(self):
+    def __str__(self):
         return '{}{}'.format(
             self.comp,
             ' ({})'.format(self.assoc) if self.assoc else ''
@@ -208,12 +208,12 @@ class Division(models.Model):
     class Meta:
         unique_together = ('comp', 'div')
 
-    comp = models.ForeignKey(Competition)
+    comp = models.ForeignKey(Competition, on_delete=models.CASCADE)
     div = models.CharField(max_length=1, choices=DIVISIONS)
     teams = models.ManyToManyField(Team, blank=True)
     active = models.BooleanField(default=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return '{} {}'.format(
             self.comp, self.get_div_display(),
         )
@@ -223,7 +223,7 @@ class Venue(models.Model):
 
     venue_name = models.CharField(max_length=200, blank=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.venue_name
 
 

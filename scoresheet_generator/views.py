@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import os
 import datetime
 import subprocess
@@ -8,8 +8,8 @@ from django.shortcuts import render
 from . import forms, writer
 from django.forms import formset_factory
 from django.contrib.staticfiles import finders
-from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
+# from django.core.files.base import ContentFile
+# from django.core.files.storage import default_storage
 from django.shortcuts import redirect
 from django.conf import settings
 
