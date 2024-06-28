@@ -126,7 +126,7 @@ def create_scoresheet_data(*args, **kwargs):
     # Build a data-dict from the input kwargs
     data_dict = {}
 
-    print(kwargs)
+    # print(kwargs)
 
     # Single input things
     if kwargs.get('assoc'):
@@ -150,7 +150,7 @@ def create_scoresheet_data(*args, **kwargs):
             " ({})".format(
                 kwargs['duty_team'].color.capitalize()) if kwargs['duty_team'].color else "",
         )
-    print('- create_scoresheet: Added basic team info')
+    # print('- create_scoresheet: Added basic team info')
 
     for team in ['home', 'away']:
         team_field_code = team.capitalize()
@@ -171,8 +171,8 @@ def create_scoresheet_data(*args, **kwargs):
             {'{}{}'.format(team_field_code, k): v
              for k, v in list(parse_team_list(team_obj).items())}
         )
-    print('- create_scoresheet: Added team lists')
-    print('- create_scoresheet: Final data_dict is...\n{}\n'.format(data_dict))
+    # print('- create_scoresheet: Added team lists')
+    # print('- create_scoresheet: Final data_dict is...\n{}\n'.format(data_dict))
 
     # import pdb; pdb.set_trace()
     return data_dict
@@ -181,7 +181,7 @@ def create_scoresheet_pdf(template, *args, **kwargs):
     data_dict = create_scoresheet_data(*args, **kwargs)
 
     # Open up the template form
-    print("Rendering PDF...")
+    # print("Rendering PDF...")
     template_pdf = pdfrw.PdfReader(template)
     template_pdf.Root.AcroForm.update(
         pdfrw.PdfDict(NeedAppearances=pdfrw.PdfObject('true')))
@@ -191,12 +191,12 @@ def create_scoresheet_pdf(template, *args, **kwargs):
             if annotation[ANNOT_FIELD_KEY]:
                 key = annotation[ANNOT_FIELD_KEY][1:-1]
                 if key in list(data_dict.keys()):
-                    print('- create_scoresheet: Adding key {}'.format(key))
+                    # print('- create_scoresheet: Adding key {}'.format(key))
                     annotation.update(
                         pdfrw.PdfDict(V='{}'.format(data_dict[key]))
                     )
 
-    print("Rendering complete!")
+    # print("Rendering complete!")
     return template_pdf
 
 def create_scoresheet_xlsx(template, *args, **kwargs):
