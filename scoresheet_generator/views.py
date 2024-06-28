@@ -5,6 +5,7 @@ import datetime
 import subprocess
 
 from django.shortcuts import render
+import openpyxl.drawing
 from . import forms, writer
 from django.forms import formset_factory
 from django.contrib.staticfiles import finders
@@ -15,6 +16,21 @@ from django.conf import settings
 
 from pdfrw import PdfWriter, IndirectPdfDict, PdfReader, PdfObject, PdfDict
 import openpyxl
+from openpyxl_image_loader import SheetImageLoader
+SHEET_IMAGE_LOCATIONS = {
+    "Record": ["A2", ],
+    "Completion": ["A1", ], 
+}
+SHEET_IMAGE_SIZES = {
+    "Record": {
+        "width": 67-2,
+        "height": 56-2,
+    },
+    "Completion": {
+        "width": 82-2,
+        "height": 76-2,
+    }
+}
 
 from django.conf import settings
 
@@ -96,7 +112,7 @@ def generate(request):
                     for page in sheet.pages:
                         output_pdf.addpage(page)
                 output_pdf.write(output_fn_full)
-                print("Attempting redirect to %s", '/'.join(output_fn_full.split(os.sep)[-2:]))
+                # print("Attempting redirect to %s", '/'.join(output_fn_full.split(os.sep)[-2:]))
             
             if fmt == "xlsx":
                 output_wb = openpyxl.reader.excel.load_workbook(template_path)
@@ -126,6 +142,13 @@ def generate(request):
                                         ).value = filled_sheet.cell(row=r, column=c).value
                                 except AttributeError:  # Merged cell, ignore
                                     pass
+                        if i != 0:
+                            loader = SheetImageLoader(filled_sheet)
+                            for im_pos in SHEET_IMAGE_LOCATIONS[sheet_name]:
+                                im = openpyxl.drawing.image.Image(loader.get(im_pos))
+                                im.height = SHEET_IMAGE_SIZES[sheet_name]["height"]
+                                im.width = SHEET_IMAGE_SIZES[sheet_name]["width"]
+                                blank_sheet.add_image(im, im_pos)
                 
                 output_wb.save(output_fn_full)
 
