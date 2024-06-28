@@ -20,7 +20,7 @@ from django.conf import settings
 # Create your views here.
 
 
-def generate(request, fmt="xlsx"):
+def generate(request, fmt="pdf"):
     if fmt == "pdf":
         template_path = finders.find('scoresheet_generator/pdf/'
                                     'IFF-Match-Record-2022-Temp-Form-MVP3'

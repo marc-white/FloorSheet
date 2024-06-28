@@ -56,21 +56,38 @@ XLS_CELL_MATCH_ID = "I13"
 XLS_CELL_START_TIME = "D14"
 XLS_CELL_END_TIME = "L14"
 XLS_CELL_REFEREE_PAIR = "A38"
-XLS_CELL_SECRETARY_NAME = "G35"
+XLS_CELL_SECRETARY_NAME = "A34"
 
 
 DATE_DISPLAY_FORMAT = "%d %b %Y"
 TIME_DISPLAY_FORMAT = "%H:%M"
 DATE_DISPLAY_FORMAT_PLAYER = "%d/%m/%y"
 
+
 def try_int_or_zero(x):
     try:
         return int(x)
     except ValueError:
         return 0
+    
+
+def compute_player_age(dob, ref_date):
+    """
+    Computes an player age.
+    
+    This is an inefficient recursive algorithm, but is the easiest
+    way to handle leap years, etc.
+    """
+    ref_date = ref_date.date()  # Game time is stored as datetime
+    assert ref_date > dob, "Cannot compute an age for a future birthday!"
+
+    age = 0
+    while (ref_date.replace(year=ref_date.year-age-1) >= dob):
+        age += 1
+    return age
 
 
-def parse_team_list(team_obj):
+def parse_team_list(team_obj, game_date=None):
     """
     Parse a team player list into a dict to be written to PDF
     """
@@ -103,6 +120,10 @@ def parse_team_list(team_obj):
         data_dict[
             'PlayerDOB{}'.format(no)
         ] = player.dob.strftime(DATE_DISPLAY_FORMAT_PLAYER) if player.dob else ''
+        if game_date is not None and player.dob is not None:
+            data_dict[
+                'PlayerDOB{}'.format(no)
+            ] += f" ({compute_player_age(player.dob, game_date)})"
 
     for i, player in enumerate(staff):
         no = '{:1d}'.format(i + 1)
@@ -169,7 +190,7 @@ def create_scoresheet_data(*args, **kwargs):
         # Add in the player/staff list
         data_dict.update(
             {'{}{}'.format(team_field_code, k): v
-             for k, v in list(parse_team_list(team_obj).items())}
+             for k, v in list(parse_team_list(team_obj, game_date=kwargs["start_time"]).items())}
         )
     # print('- create_scoresheet: Added team lists')
     # print('- create_scoresheet: Final data_dict is...\n{}\n'.format(data_dict))
