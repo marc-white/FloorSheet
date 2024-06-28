@@ -20,22 +20,26 @@ from django.conf import settings
 # Create your views here.
 
 
-def generate(request, fmt="pdf"):
-    if fmt == "pdf":
-        template_path = finders.find('scoresheet_generator/pdf/'
-                                    'IFF-Match-Record-2022-Temp-Form-MVP3'
-                                    '.pdf')
-        writer_func = writer.create_scoresheet_pdf
-    elif fmt == "xlsx":
-        template_path = finders.find('scoresheet_generator/xlsx/'
-                                    'IFFMatchRecord2022_blank.xlsx')
-        writer_func = writer.create_scoresheet_xlsx
-    else:
-        raise ValueError(f"Format {fmt} is unknown")
+def generate(request):
     
     ss_formset = formset_factory(forms.ScoresheetGeneratorForm, extra=5)
 
     if request.method == 'POST':
+
+        fmt = request.POST.get("create")
+
+        if fmt == "pdf":
+            template_path = finders.find('scoresheet_generator/pdf/'
+                                        'IFF-Match-Record-2022-Temp-Form-MVP3'
+                                        '.pdf')
+            writer_func = writer.create_scoresheet_pdf
+        elif fmt == "xlsx":
+            template_path = finders.find('scoresheet_generator/xlsx/'
+                                        'IFFMatchRecord2022_blank.xlsx')
+            writer_func = writer.create_scoresheet_xlsx
+        else:
+            raise ValueError(f"Format {fmt} is unknown")
+
         ss_formset = ss_formset(request.POST)
         if ss_formset.is_valid():
             pdfs = []
@@ -76,7 +80,7 @@ def generate(request, fmt="pdf"):
             zip_name = 'sheets_made_at_' + datetime.datetime.now().strftime('%Y-%m-%d-%H%M') + '.zip'
             print(f"Preparing to zip to {zip_name}")
             zip_path = os.path.join(settings.MEDIA_ROOT, zip_name)
-            subprocess.check_call(['zip', '-j', zip_path] + pdfs)
+            subprocess.check_call(['zip', '-jFS', zip_path] + pdfs)
             print("Zip complete!")
             return redirect('/'.join(zip_path.split(os.sep)[-2:]))
 
