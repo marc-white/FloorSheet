@@ -153,10 +153,11 @@ def create_scoresheet_data(*args, **kwargs):
     if kwargs.get('assoc'):
         pass
     if kwargs.get('comp'):
-        data_dict['Competition'] = "{} {}".format(
-            kwargs['comp'].comp.comp,
-            kwargs['comp'].get_div_display(),
-        )
+        # data_dict['Competition'] = "{} {}".format(
+        #     kwargs['comp'].comp.comp,
+        #     kwargs['comp'].get_div_display(),
+        # )
+        data_dict["comp_obj"] = kwargs["comp"]
         data_dict['Association'] = kwargs['comp'].comp.assoc
     if kwargs.get('venue'):
         data_dict['Venue'] = kwargs['venue']
@@ -201,6 +202,13 @@ def create_scoresheet_data(*args, **kwargs):
 def create_scoresheet_pdf(template, *args, **kwargs):
     data_dict = create_scoresheet_data(*args, **kwargs)
 
+    # Do the necessary manipulation set up the competition name
+    data_dict['Competition'] = "{} {}".format(
+            data_dict['comp_obj'].comp.comp,
+            data_dict['comp_obj'].get_div_display(),
+        )
+    del(data_dict['comp_obj'])
+
     # Open up the template form
     # print("Rendering PDF...")
     template_pdf = pdfrw.PdfReader(template)
@@ -223,6 +231,13 @@ def create_scoresheet_pdf(template, *args, **kwargs):
 def create_scoresheet_xlsx(template, *args, **kwargs):
     data_dict = create_scoresheet_data(*args, **kwargs)
 
+    # Do the necessary manipulation set up the competition name
+    data_dict['Competition'] = data_dict['comp_obj'].comp.comp
+    # data_dict['Division'] = data_dict['comp_obj'].div.upper()
+    data_dict['Division'] = ''.join([_.upper()[0] for _ in 
+                                     data_dict['comp_obj'].get_div_display().split()])
+    del(data_dict['comp_obj'])
+
     # Open up the template
     template_xlsx = openpyxl.reader.excel.load_workbook(
         template
@@ -233,6 +248,7 @@ def create_scoresheet_xlsx(template, *args, **kwargs):
     for target_cell, target_data in {
         XLS_CELL_ASSOCIATION: "Association",
         XLS_CELL_COMPETITION: "Competition",
+        XLS_CELL_DIVISION: "Division",
         XLS_CELL_VENUE: "Venue",
         XLS_CELL_DATE: "Date",
         XLS_CELL_MATCH_ID: "MatchNo",
