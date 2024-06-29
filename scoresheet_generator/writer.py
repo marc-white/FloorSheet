@@ -3,6 +3,7 @@
 # import csv
 # import os
 import pdfrw
+import openpyxl
 # import subprocess
 
 from django.conf import settings
@@ -21,14 +22,72 @@ STAFF_ROLE_KEY = 'sSmM'
 CAPTAIN_ROLE_KEY = 'cC'
 GOALIE_ROLE_KEY = 'gG'
 
+MAX_NO_OF_PLAYERS = 20
+MAX_NO_OF_STAFF = 5
+
+XLS_COLUMN_GC = "R"
+XLS_COLUMN_PLAYER_NO = "S"
+XLS_COLUMN_PLAYER_NAME = "T"
+XLS_COLUMN_DOB = "Y"
+
+XLS_ROW_HOME_FIRST = 4
+XLS_ROW_AWAY_FIRST = 28
+
+XLS_HOME_TEAM_NAME = "U2"
+XLS_HOME_STAFF_1 = "W24"
+XLS_HOME_STAFF_2 = "AB24"
+XLS_HOME_STAFF_3 = "AH24"
+XLS_HOME_STAFF_4 = "AB25"
+XLS_HOME_STAFF_5 = "AH25"
+
+XLS_AWAY_TEAM_NAME = "U26"
+XLS_AWAY_STAFF_1 = "W48"
+XLS_AWAY_STAFF_2 = "AB48"
+XLS_AWAY_STAFF_3 = "AH48"
+XLS_AWAY_STAFF_4 = "AB49"
+XLS_AWAY_STAFF_5 = "AH49"
+
+XLS_CELL_ASSOCIATION = "E6"
+XLS_CELL_COMPETITION = "E8"
+XLS_CELL_DIVISION = "P8"
+XLS_CELL_VENUE = "E10"
+XLS_CELL_DATE = "D12"
+XLS_CELL_MATCH_ID = "I13"
+XLS_CELL_START_TIME = "D14"
+XLS_CELL_END_TIME = "L14"
+XLS_CELL_REFEREE_PAIR = "A38"
+XLS_CELL_SECRETARY_NAME = "A34"
+
+
+DATE_DISPLAY_FORMAT = "%d %b %Y"
+TIME_DISPLAY_FORMAT = "%H:%M"
+DATE_DISPLAY_FORMAT_PLAYER = "%d/%m/%y"
+
+
 def try_int_or_zero(x):
     try:
         return int(x)
     except ValueError:
         return 0
+    
+
+def compute_player_age(dob, ref_date):
+    """
+    Computes an player age.
+    
+    This is an inefficient recursive algorithm, but is the easiest
+    way to handle leap years, etc.
+    """
+    ref_date = ref_date.date()  # Game time is stored as datetime
+    assert ref_date > dob, "Cannot compute an age for a future birthday!"
+
+    age = 0
+    while (ref_date.replace(year=ref_date.year-age-1) >= dob):
+        age += 1
+    return age
 
 
-def parse_team_list(team_obj):
+def parse_team_list(team_obj, game_date=None):
     """
     Parse a team player list into a dict to be written to PDF
     """
@@ -60,16 +119,21 @@ def parse_team_list(team_obj):
         data_dict['PlayerName{}'.format(no)] = player.name
         data_dict[
             'PlayerDOB{}'.format(no)
-        ] = player.dob.strftime('%d/%m/%y') if player.dob else ''
+        ] = player.dob.strftime(DATE_DISPLAY_FORMAT_PLAYER) if player.dob else ''
+        if game_date is not None and player.dob is not None:
+            data_dict[
+                'PlayerDOB{}'.format(no)
+            ] += f" ({compute_player_age(player.dob, game_date)})"
 
     for i, player in enumerate(staff):
         no = '{:1d}'.format(i + 1)
-        data_dict['Off{}'.format(no)] = player['name']
+        data_dict['Off{}'.format(no)] = player.name
 
+    # import pdb; pdb.set_trace()
     return data_dict
 
 
-def create_scoresheet(template, *args, **kwargs):
+def create_scoresheet_data(*args, **kwargs):
     """
     Start filling out a floorball scoresheet, based on a passed info
 
@@ -83,7 +147,7 @@ def create_scoresheet(template, *args, **kwargs):
     # Build a data-dict from the input kwargs
     data_dict = {}
 
-    print(kwargs)
+    # print(kwargs)
 
     # Single input things
     if kwargs.get('assoc'):
@@ -99,8 +163,8 @@ def create_scoresheet(template, *args, **kwargs):
     if kwargs.get('match_id'):
         data_dict['MatchNo'] = kwargs['match_id']
     if kwargs.get('start_time'):
-        data_dict['Date'] = kwargs['start_time'].strftime('%d %b %Y')
-        data_dict['StartTime'] = kwargs['start_time'].strftime('%H:%M')
+        data_dict['Date'] = kwargs['start_time'].strftime(DATE_DISPLAY_FORMAT)
+        data_dict['StartTime'] = kwargs['start_time'].strftime(TIME_DISPLAY_FORMAT)
     if kwargs.get('duty_team'):
         data_dict['MatchSecName'] = '[{}{}]'.format(
             kwargs['duty_team'].__str__(),
@@ -126,14 +190,19 @@ def create_scoresheet(template, *args, **kwargs):
         # Add in the player/staff list
         data_dict.update(
             {'{}{}'.format(team_field_code, k): v
-             for k, v in list(parse_team_list(team_obj).items())}
+             for k, v in list(parse_team_list(team_obj, game_date=kwargs["start_time"]).items())}
         )
     # print('- create_scoresheet: Added team lists')
     # print('- create_scoresheet: Final data_dict is...\n{}\n'.format(data_dict))
 
-    # return data_dict
+    # import pdb; pdb.set_trace()
+    return data_dict
+
+def create_scoresheet_pdf(template, *args, **kwargs):
+    data_dict = create_scoresheet_data(*args, **kwargs)
 
     # Open up the template form
+    # print("Rendering PDF...")
     template_pdf = pdfrw.PdfReader(template)
     template_pdf.Root.AcroForm.update(
         pdfrw.PdfDict(NeedAppearances=pdfrw.PdfObject('true')))
@@ -148,4 +217,46 @@ def create_scoresheet(template, *args, **kwargs):
                         pdfrw.PdfDict(V='{}'.format(data_dict[key]))
                     )
 
+    # print("Rendering complete!")
     return template_pdf
+
+def create_scoresheet_xlsx(template, *args, **kwargs):
+    data_dict = create_scoresheet_data(*args, **kwargs)
+
+    # Open up the template
+    template_xlsx = openpyxl.reader.excel.load_workbook(
+        template
+    )
+    template_record = template_xlsx.get_sheet_by_name("Record")
+
+    # Set up the game parameters
+    for target_cell, target_data in {
+        XLS_CELL_ASSOCIATION: "Association",
+        XLS_CELL_COMPETITION: "Competition",
+        XLS_CELL_VENUE: "Venue",
+        XLS_CELL_DATE: "Date",
+        XLS_CELL_MATCH_ID: "MatchNo",
+        XLS_CELL_START_TIME: "StartTime",
+        XLS_CELL_SECRETARY_NAME: "MatchSecName"
+    }.items():
+        try:
+            template_record[target_cell] = data_dict.get(target_data, None)
+        except ValueError:
+            template_record[target_cell] = data_dict.get(target_data).__str__()
+
+    for team in ["Home", "Away"]:
+        if data_dict.get(f"{team}TeamName") is not None:
+            for i in range(0, MAX_NO_OF_PLAYERS):
+                istr = f"{i+1:02d}"
+                if data_dict.get(f"{team}PlayerName{istr}") is not None:
+                    row = globals()[f"XLS_ROW_{team.upper()}_FIRST"] + i
+                    template_record[f"{XLS_COLUMN_GC}{row}"] = data_dict.get(f"{team}PlayerGC{istr}")
+                    template_record[f"{XLS_COLUMN_PLAYER_NO}{row}"] = data_dict.get(f"{team}PlayerNo{istr}")
+                    template_record[f"{XLS_COLUMN_PLAYER_NAME}{row}"] = data_dict.get(f"{team}PlayerName{istr}")
+                    template_record[f"{XLS_COLUMN_DOB}{row}"] = data_dict.get(f"{team}PlayerDOB{istr}")
+
+            for i in range(0, MAX_NO_OF_STAFF):
+                istr = f"{i+1:01d}"
+                template_record[globals()[f"XLS_{team.upper()}_STAFF_{istr}"]] = data_dict.get(f"{team}Off{istr}")
+
+    return template_xlsx
