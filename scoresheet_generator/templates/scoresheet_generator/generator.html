@@ -22,8 +22,9 @@
 <form action="" class="form-horizontal" method="POST">
     {{ ss_formset.management_form }}
     {% csrf_token %}
-    <button class="btn btn-success" type="submit" name="create" value="pdf">Create scoresheet(s) (PDF)</button>
-    <button class="btn btn-primary" type="submit" name="create" value="xlsx">Create scoresheet(s) (XSLX)</button>
+    <button class="btn btn-success" type="submit" name="create" value="xlsx-pdf">Create (2022, PDF)</button>
+    <button class="btn btn-secondary" type="submit" name="create" value="xlsx">Create (2022, XLSX)</button>
+    <button class="btn btn-secondary" type="submit" name="create" value="pdf">Create (2010, PDF)</button>
 
     {% for form in ss_formset %}
     <hr />
@@ -33,8 +34,10 @@
         </table>
     {% endfor %}
     <hr />
-    <button class="btn btn-success" type="submit" name="create" value="pdf">Create scoresheet(s) (PDF)</button>
-    <button class="btn btn-primary" type="submit" name="create" value="xlsx">Create scoresheet(s) (XSLX)</button>
+    <button class="btn btn-success" type="submit" name="create" value="xlsx-pdf">Create (2022, PDF)</button>
+    <button class="btn btn-secondary" type="submit" name="create" value="xlsx">Create (2022, XLSX)</button>
+    <button class="btn btn-secondary" type="submit" name="create" value="pdf">Create (2010, PDF)</button>
+
 </form>
 
 <!--<script type="text/javascript">-->

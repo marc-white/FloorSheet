@@ -6,7 +6,7 @@ import subprocess
 
 from django.shortcuts import render
 import openpyxl.drawing
-from . import forms, writer
+from . import forms, writer, create_pdf_from_xlsx
 from django.forms import formset_factory
 from django.contrib.staticfiles import finders
 # from django.core.files.base import ContentFile
@@ -31,6 +31,7 @@ SHEET_IMAGE_SIZES = {
         "height": 76-2,
     }
 }
+CONVERTED_PDF_SIZE_LIMIT = 250
 
 from django.conf import settings
 
@@ -44,6 +45,11 @@ def generate(request):
     if request.method == 'POST':
 
         fmt = request.POST.get("create")
+
+        convert_xlsx = False
+        if fmt == "xlsx-pdf":
+            convert_xlsx = True
+            fmt = "xlsx"
 
         if fmt == "pdf":
             template_path = finders.find('scoresheet_generator/pdf/'
@@ -106,7 +112,7 @@ def generate(request):
             output_fn_full = os.path.join(settings.MEDIA_ROOT, output_fn)
 
             if fmt == "pdf":
-                import pdb; pdb.set_trace()
+                # import pdb; pdb.set_trace()
                 output_pdf = PdfWriter()
                 for sheet in sheets:
                     for page in sheet.pages:
@@ -151,6 +157,20 @@ def generate(request):
                                 blank_sheet.add_image(im, im_pos)
                 
                 output_wb.save(output_fn_full)
+
+                if convert_xlsx:
+                    output_fn_full = create_pdf_from_xlsx.create_pdf_from_xlsx(output_fn_full)
+
+                    # The Adobe API sometimes includes blank pages in its return. We can 
+                    # identify and eliminate these by looking at
+                    # page.Contents["/Length"] and deleting pages below a certain limit
+                    converted_pdf = PdfReader(output_fn_full)
+                    final_pdf = PdfWriter()
+                    for page in converted_pdf.pages:
+                        if int(page.Contents["/Length"]) > CONVERTED_PDF_SIZE_LIMIT:
+                            final_pdf.addpage(page)
+                    final_pdf.write(output_fn_full)
+
 
             return redirect('/'.join(output_fn_full.split(os.sep)[-2:]))
 
