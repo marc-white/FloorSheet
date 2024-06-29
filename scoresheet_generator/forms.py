@@ -1,28 +1,12 @@
 from django import forms
 from . import models
+from django.contrib.admin.widgets import AdminSplitDateTime
 
 # from datetimewidget.widgets import DateTimeWidget
 
 class TeamColorChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return '{} ({})'.format(obj.team_name, obj.color)
-
-class JQueryUIDatepickerWidget(forms.DateInput):
-    def __init__(self, **kwargs):
-        super(forms.DateInput, self).__init__(attrs={"size":10, "class": "dateinput"}, **kwargs)
-
-    class Media:
-        css = {"all":
-                   (
-                       "http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.6/themes/redmond/jquery-ui.css",
-                       "scoresheet_generator/css/jquery-ui-timepicker-addon.css",
-                    )
-               }
-        js = (
-            "http://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js",
-            "http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.6/jquery-ui.min.js",
-            "scoresheet_generator/js/jquery-ui-timepicker-addon.js",
-        )
 
 
 class ScoresheetGeneratorForm(forms.Form):
