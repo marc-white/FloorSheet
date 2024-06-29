@@ -64,6 +64,14 @@ XLS_FILL_JUNIOR = PatternFill("solid",
                               fgColor=XLS_COLOR_JUNIOR)
 XLS_AGE_LIMIT_JUNIOR = 18
 
+XLS_COLOR_BORROWED = Color("CCFFCC")
+XLS_FILL_BORROWED = PatternFill("solid", fgColor=XLS_COLOR_BORROWED)
+XLS_BORROWED_MARKER = "(B)"
+
+XLS_COLOR_MEMBERSHIP = Color("CCFFFF")
+XLS_FILL_MEMBERSHIP = PatternFill("solid", fgColor=XLS_COLOR_MEMBERSHIP)
+XLS_MEMBERSHIP_MARKER = "(CHECK MEMB)"
+
 
 DATE_DISPLAY_FORMAT = "%d %b %Y"
 TIME_DISPLAY_FORMAT = "%H:%M"
@@ -282,10 +290,11 @@ def create_scoresheet_xlsx(template, *args, **kwargs):
                     template_record[f"{XLS_COLUMN_DOB}{row}"] = data_dict.get(f"{team}PlayerDOB{istr}")
                     age_match = re.match(DATE_DISPLAY_REGEX_PLAYER_AGE, data_dict.get(f"{team}PlayerDOB{istr}"))
                     if age_match and int(age_match.group('age')) < XLS_AGE_LIMIT_JUNIOR:
-                        template_record[f"{XLS_COLUMN_GC}{row}"].fill = XLS_FILL_JUNIOR
-                        template_record[f"{XLS_COLUMN_PLAYER_NO}{row}"].fill = XLS_FILL_JUNIOR
-                        template_record[f"{XLS_COLUMN_PLAYER_NAME}{row}"].fill = XLS_FILL_JUNIOR
                         template_record[f"{XLS_COLUMN_DOB}{row}"].fill = XLS_FILL_JUNIOR
+                    if XLS_BORROWED_MARKER in data_dict.get(f"{team}PlayerName{istr}"):
+                        template_record[f"{XLS_COLUMN_PLAYER_NAME}{row}"].fill = XLS_FILL_BORROWED
+                    if XLS_MEMBERSHIP_MARKER in data_dict.get(f"{team}PlayerName{istr}"):
+                        template_record[f"{XLS_COLUMN_PLAYER_NAME}{row}"].fill = XLS_FILL_MEMBERSHIP
 
             for i in range(0, MAX_NO_OF_STAFF):
                 istr = f"{i+1:01d}"
