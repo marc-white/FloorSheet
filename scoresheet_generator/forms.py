@@ -18,11 +18,14 @@ class ScoresheetGeneratorForm(forms.Form):
                                   # initial=models.Competition.objects.first(),
                                   required=False,
                                   label='Competition')
-    start_time = forms.DateTimeField(required=True,
-                                     widget=forms.widgets.DateTimeInput(
-                                        #  options={
-                                        #      'format': 'yyyy-mm-dd hh:ii',
-                                        #  }
+    start_time = forms.SplitDateTimeField(required=True,
+                                     widget=forms.SplitDateTimeWidget(
+                                        date_attrs={
+                                            "class": "datepicker",
+                                        },
+                                        time_attrs={
+                                            "class": "timepicker",
+                                        },
                                      ))
     venue = forms.ModelChoiceField(queryset=models.Venue.objects.all(),
                                    # initial=models.Venue.objects.first(),

@@ -4,12 +4,20 @@
 <head>
     <title>Floorball Scoresheet Generator</title>
 
+    <!-- JQuery -->
+    <script src="{% url 'javascript-catalog' %}"></script>
     <script src="{% static 'scoresheet_generator/js/jquery-3.3.1.min.js' %}"></script>
-<!--    <script src="/admin/jsi18n/"></script>-->
+    <script src="{% static 'scoresheet_generator/js/jquery-ui.min.js' %}"></script>
+    <script src="{% static 'scoresheet_generator/js/jquery.timepicker.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'scoresheet_generator/css/jquery-ui.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'scoresheet_generator/css/jquery-ui.structure.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'scoresheet_generator/css/jquery-ui.theme.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'scoresheet_generator/css/jquery.timepicker.min.css' %}" />
 
     <!-- Bootstrap -->
     <link rel="stylesheet" href="{% static 'bootstrap-3.3.7-dist/css/bootstrap.min.css' %}" />
     <link rel="stylesheet" href="{% static 'bootstrap-3.3.7-dist/css/bootstrap-theme.min.css' %}" />
+
     <script src="{% static 'bootstrap-3.3.7-dist/js/bootstrap.min.js' %}" ></script>
 </head>
 
@@ -39,6 +47,20 @@
     <button class="btn btn-secondary" type="submit" name="create" value="pdf">Create (2010, PDF)</button>
 
 </form>
+
+<script type="text/javascript">
+    $( document ).ready( function () {
+        $(".datepicker").datepicker({
+            dateFormat: "yy-mm-dd",
+        });
+        $(".timepicker").timepicker({
+            timeFormat: "HH:mm",
+            interval: 5,
+            startTime: "9",
+            dynamic: true,
+        });
+    })
+</script>
 
 <!--<script type='text/javascript'>-->
 <!--function updateElementIndex(el, prefix, ndx) {-->

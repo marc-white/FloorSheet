@@ -16,8 +16,11 @@ Including another URLconf
 from django.urls import re_path
 from django.conf import settings
 from . import views
+from django.views.i18n import JavaScriptCatalog
 
 urlpatterns = [
+    re_path(r'^jsi18n/$', JavaScriptCatalog.as_view(),
+            name='javascript-catalog'),
     re_path('^$', views.generate)
 
 
