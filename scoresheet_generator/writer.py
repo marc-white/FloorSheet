@@ -1,9 +1,10 @@
 # Module that creates the scoresheet
 
 # import csv
-# import os
+import re
 import pdfrw
 import openpyxl
+from openpyxl.styles import Color, PatternFill
 # import subprocess
 
 from django.conf import settings
@@ -58,10 +59,16 @@ XLS_CELL_END_TIME = "L14"
 XLS_CELL_REFEREE_PAIR = "A38"
 XLS_CELL_SECRETARY_NAME = "A34"
 
+XLS_COLOR_JUNIOR = Color('FFFF99')
+XLS_FILL_JUNIOR = PatternFill("solid",
+                              fgColor=XLS_COLOR_JUNIOR)
+XLS_AGE_LIMIT_JUNIOR = 18
+
 
 DATE_DISPLAY_FORMAT = "%d %b %Y"
 TIME_DISPLAY_FORMAT = "%H:%M"
 DATE_DISPLAY_FORMAT_PLAYER = "%d/%m/%y"
+DATE_DISPLAY_REGEX_PLAYER_AGE = re.compile(r"^\s*(?P<day>[0-9]{2})/(?P<month>[0-9]{2})/(?P<year>[0-9]{2})\s*\((?P<age>[0-9]*)\)\s*$")
 
 
 def try_int_or_zero(x):
@@ -273,6 +280,12 @@ def create_scoresheet_xlsx(template, *args, **kwargs):
                     template_record[f"{XLS_COLUMN_PLAYER_NO}{row}"] = data_dict.get(f"{team}PlayerNo{istr}")
                     template_record[f"{XLS_COLUMN_PLAYER_NAME}{row}"] = data_dict.get(f"{team}PlayerName{istr}")
                     template_record[f"{XLS_COLUMN_DOB}{row}"] = data_dict.get(f"{team}PlayerDOB{istr}")
+                    age_match = re.match(DATE_DISPLAY_REGEX_PLAYER_AGE, data_dict.get(f"{team}PlayerDOB{istr}"))
+                    if age_match and int(age_match.group('age')) < XLS_AGE_LIMIT_JUNIOR:
+                        template_record[f"{XLS_COLUMN_GC}{row}"].fill = XLS_FILL_JUNIOR
+                        template_record[f"{XLS_COLUMN_PLAYER_NO}{row}"].fill = XLS_FILL_JUNIOR
+                        template_record[f"{XLS_COLUMN_PLAYER_NAME}{row}"].fill = XLS_FILL_JUNIOR
+                        template_record[f"{XLS_COLUMN_DOB}{row}"].fill = XLS_FILL_JUNIOR
 
             for i in range(0, MAX_NO_OF_STAFF):
                 istr = f"{i+1:01d}"

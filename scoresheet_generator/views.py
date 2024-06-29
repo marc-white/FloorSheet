@@ -3,6 +3,7 @@
 import os
 import datetime
 import subprocess
+import copy
 
 from django.shortcuts import render
 import openpyxl.drawing
@@ -146,6 +147,9 @@ def generate(request):
                                     blank_sheet.cell(
                                         row=r, column=c
                                         ).value = filled_sheet.cell(row=r, column=c).value
+                                    blank_sheet.cell(
+                                        row=r, column=c
+                                    ).fill = copy.copy(filled_sheet.cell(row=r, column=c).fill)
                                 except AttributeError:  # Merged cell, ignore
                                     pass
                         if i != 0:
