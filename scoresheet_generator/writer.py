@@ -246,6 +246,9 @@ def create_scoresheet_xlsx(template, *args, **kwargs):
 
     for team in ["Home", "Away"]:
         if data_dict.get(f"{team}TeamName") is not None:
+
+            template_record[globals()[f"XLS_{team.upper()}_TEAM_NAME"]] = data_dict.get(f"{team}TeamName")
+
             for i in range(0, MAX_NO_OF_PLAYERS):
                 istr = f"{i+1:02d}"
                 if data_dict.get(f"{team}PlayerName{istr}") is not None:
