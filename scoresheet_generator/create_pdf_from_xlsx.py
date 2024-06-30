@@ -4,6 +4,9 @@
 
  NOTICE: Adobe permits you to use, modify, and distribute this file in
  accordance with the terms of the Adobe license agreement accompanying it.
+
+ This file has been modified from the Adobe demonstration file
+ 'create_pdf_from_xlsx.py'.
 """
 
 import logging
