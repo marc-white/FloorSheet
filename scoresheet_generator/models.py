@@ -90,13 +90,14 @@ class Team(models.Model):
 
         # Open up a CSV reader
         storage = DefaultStorage()
-        with storage.open(self.team_list.name, mode='r') as team_list:
-            reader = csv.DictReader(codecs.EncodedFile(team_list, 'utf-8', 'utf-8-sig'),
-                                    # team_list,
-                                    fieldnames=(
-                                        'role', 'number', 'name',
-                                        'birthday',
-                                    ))
+        with storage.open(self.team_list.name, mode='rt') as team_list:
+            reader = csv.DictReader(
+                team_list,
+                fieldnames=(
+                    'role', 'number', 'name',
+                    'birthday',
+                ),
+                dialect='unix')
             rows = [row for row in reader]
 
         data_dict = {}
@@ -166,7 +167,7 @@ class Player(models.Model):
     is_captain = models.BooleanField(default=False)
     is_goalie = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
-    team = models.ForeignKey(Team, on_delete=models.DO_NOTHING)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE)
 
     def __str__(self):
         return '#{}. {} ({})'.format(
