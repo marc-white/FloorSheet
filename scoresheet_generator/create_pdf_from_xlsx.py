@@ -12,8 +12,14 @@
 import logging
 import os
 
-from adobe.pdfservices.operation.auth.service_principal_credentials import ServicePrincipalCredentials
-from adobe.pdfservices.operation.exception.exceptions import ServiceApiException, ServiceUsageException, SdkException
+from adobe.pdfservices.operation.auth.service_principal_credentials import (
+    ServicePrincipalCredentials,
+)
+from adobe.pdfservices.operation.exception.exceptions import (
+    ServiceApiException,
+    ServiceUsageException,
+    SdkException,
+)
 from adobe.pdfservices.operation.io.cloud_asset import CloudAsset
 from adobe.pdfservices.operation.io.stream_asset import StreamAsset
 from adobe.pdfservices.operation.pdf_services import PDFServices
@@ -21,23 +27,26 @@ from adobe.pdfservices.operation.pdf_services_media_type import PDFServicesMedia
 from adobe.pdfservices.operation.pdfjobs.jobs.create_pdf_job import CreatePDFJob
 from adobe.pdfservices.operation.pdfjobs.result.create_pdf_result import CreatePDFResult
 
+
 def create_pdf_from_xlsx(fn):
     try:
-        file = open(fn, 'rb')
+        file = open(fn, "rb")
         input_stream = file.read()
         file.close()
 
         # Initial setup, create credentials instance
         credentials = ServicePrincipalCredentials(
-            client_id=os.getenv('PDF_SERVICES_CLIENT_ID'),
-            client_secret=os.getenv('PDF_SERVICES_CLIENT_SECRET')
+            client_id=os.getenv("PDF_SERVICES_CLIENT_ID"),
+            client_secret=os.getenv("PDF_SERVICES_CLIENT_SECRET"),
         )
 
         # Creates a PDF Services instance
         pdf_services = PDFServices(credentials=credentials)
 
         # Creates an asset(s) from source file(s) and upload
-        input_asset = pdf_services.upload(input_stream=input_stream, mime_type=PDFServicesMediaType.XLSX)
+        input_asset = pdf_services.upload(
+            input_stream=input_stream, mime_type=PDFServicesMediaType.XLSX
+        )
 
         # Creates a new job instance
         create_pdf_job = CreatePDFJob(input_asset)
@@ -51,12 +60,11 @@ def create_pdf_from_xlsx(fn):
         stream_asset: StreamAsset = pdf_services.get_content(result_asset)
 
         # Creates an output stream and copy stream asset's content to it
-        output_file_path = '.'.join(fn.split('.')[:-1]) + '.pdf'
+        output_file_path = ".".join(fn.split(".")[:-1]) + ".pdf"
         with open(output_file_path, "wb") as file:
             file.write(stream_asset.get_input_stream())
 
         return output_file_path
 
     except (ServiceApiException, ServiceUsageException, SdkException) as e:
-        logging.exception(f'Exception encountered while executing operation: {e}')
-
+        logging.exception(f"Exception encountered while executing operation: {e}")

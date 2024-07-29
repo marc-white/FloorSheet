@@ -12,22 +12,22 @@ import datetime
 # Create your models here.
 
 DIVISIONS = (
-    ('m', 'Men'),
-    ('w', 'Women'),
-    ('1', 'Division 1'),
-    ('2', 'Division 2'),
-    ('a', 'All-in'),
+    ("m", "Men"),
+    ("w", "Women"),
+    ("1", "Division 1"),
+    ("2", "Division 2"),
+    ("a", "All-in"),
 )
 
 ROLES = (
-    ('C', 'Captain'),
-    ('G', 'Goalkeeper'),
-    ('S', 'Team staff'),
+    ("C", "Captain"),
+    ("G", "Goalkeeper"),
+    ("S", "Team staff"),
 )
 
-STAFF_ROLE_KEY = 'sSmM'
-CAPTAIN_ROLE_KEY = 'cC'
-GOALIE_ROLE_KEY = 'gG'
+STAFF_ROLE_KEY = "sSmM"
+CAPTAIN_ROLE_KEY = "cC"
+GOALIE_ROLE_KEY = "gG"
 
 _DATE_ORDERS = [
     ["%d", "%m", "%y"],
@@ -35,13 +35,15 @@ _DATE_ORDERS = [
     ["%y", "%m", "%d"],
     ["%Y", "%m", "%d"],
 ]
-_DATE_SEPS = ["-", "/", ]
+_DATE_SEPS = [
+    "-",
+    "/",
+]
 
 DATE_FORMATS = []
 for sep in _DATE_SEPS:
     for order in _DATE_ORDERS:
         DATE_FORMATS.append(sep.join(order))
-
 
 
 def try_int_or_other(x, other=None):
@@ -61,13 +63,11 @@ def parse_date(date_str):
 
 
 class Team(models.Model):
-
     class Meta:
-        unique_together = ('team_name', )
+        unique_together = ("team_name",)
 
     # Model fields
-    team_name = models.CharField(max_length=100, blank=False,
-                                 unique=False)
+    team_name = models.CharField(max_length=100, blank=False, unique=False)
     color = models.CharField(max_length=30, blank=True)
     team_list = models.FileField(blank=True)
 
@@ -76,39 +76,46 @@ class Team(models.Model):
         self._original_team_list = self.team_list.name
 
     def __str__(self):
-        return '{}'.format(self.team_name, )
+        return "{}".format(
+            self.team_name,
+        )
 
     def parse_team_list(self):
         """
         Parse the CSV team list
         :return:
         """
-        if self.team_list.name == '':
+        if self.team_list.name == "":
             return {}
 
         # Open up a CSV reader
         storage = DefaultStorage()
-        with storage.open(self.team_list.name, mode='rt') as team_list:
+        with storage.open(self.team_list.name, mode="rt") as team_list:
             reader = csv.DictReader(
                 team_list,
                 fieldnames=(
-                    'role', 'number', 'name',
-                    'birthday',
+                    "role",
+                    "number",
+                    "name",
+                    "birthday",
                 ),
-                dialect='unix')
+                dialect="unix",
+            )
             rows = [row for row in reader]
 
         data_dict = {}
 
         print(rows)
 
-        data_dict['players'] = [row for row in rows
-                                if not any([_ in row['role'] for _ in STAFF_ROLE_KEY])][:20]
-        data_dict['players'].sort(key=lambda x: try_int_or_other(x['number'], 0))
+        data_dict["players"] = [
+            row for row in rows if not any([_ in row["role"] for _ in STAFF_ROLE_KEY])
+        ][:20]
+        data_dict["players"].sort(key=lambda x: try_int_or_other(x["number"], 0))
 
-        data_dict['staff'] = [row for row in rows
-                              if any([_ in row['role'] for _ in STAFF_ROLE_KEY])][:5]
-        data_dict['staff'].sort(key=lambda x: try_int_or_other(x['number'], 0))
+        data_dict["staff"] = [
+            row for row in rows if any([_ in row["role"] for _ in STAFF_ROLE_KEY])
+        ][:5]
+        data_dict["staff"].sort(key=lambda x: try_int_or_other(x["number"], 0))
 
         return data_dict
 
@@ -116,21 +123,21 @@ class Team(models.Model):
         data_dict = self.parse_team_list()
         if len(data_dict) == 0:
             return
-        for player in data_dict['players']:
+        for player in data_dict["players"]:
             player_obj = Player(
-                name=player['name'],
-                number=try_int_or_other(player['number'], None),
+                name=player["name"],
+                number=try_int_or_other(player["number"], None),
                 team=self,
-                dob=parse_date(player['birthday']),
-                is_captain=any([_ in player['role'] for _ in CAPTAIN_ROLE_KEY]),
-                is_goalie=any([_ in player['role'] for _ in GOALIE_ROLE_KEY]),
+                dob=parse_date(player["birthday"]),
+                is_captain=any([_ in player["role"] for _ in CAPTAIN_ROLE_KEY]),
+                is_goalie=any([_ in player["role"] for _ in GOALIE_ROLE_KEY]),
                 is_staff=False,
             )
             player_obj.save()
-        for player in data_dict['staff']:
+        for player in data_dict["staff"]:
             player_obj = Player(
-                name=player['name'],
-                number=try_int_or_other(player['number'], None),
+                name=player["name"],
+                number=try_int_or_other(player["number"], None),
                 team=self,
                 is_captain=False,
                 is_goalie=False,
@@ -140,7 +147,10 @@ class Team(models.Model):
 
     def save(self, *args, **kwargs):
         super(Team, self).save(*args, **kwargs)
-        if self.team_list.name != self._original_team_list and len(self.team_list.name) > 0:
+        if (
+            self.team_list.name != self._original_team_list
+            and len(self.team_list.name) > 0
+        ):
             # Blow away existing Players for this team
             players = Player.objects.filter(team=self)
             players.delete()
@@ -149,17 +159,20 @@ class Team(models.Model):
 
 
 class Player(models.Model):
-
     class Meta:
         # unique_together = ('team', 'number', )
-        ordering = ('team', 'number', 'is_goalie', 'is_captain', 'name', )
+        ordering = (
+            "team",
+            "number",
+            "is_goalie",
+            "is_captain",
+            "name",
+        )
 
     # Model fields
     name = models.CharField(max_length=300, blank=False, unique=False)
     number = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(99)],
-        blank=True,
-        null=True
+        validators=[MinValueValidator(1), MaxValueValidator(99)], blank=True, null=True
     )
     dob = models.DateField(blank=True, null=True)
     is_captain = models.BooleanField(default=False)
@@ -168,7 +181,7 @@ class Player(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
 
     def __str__(self):
-        return '#{}. {} ({})'.format(
+        return "#{}. {} ({})".format(
             self.number,
             self.name,
             self.team.team_name,
@@ -176,36 +189,37 @@ class Player(models.Model):
 
     def clean(self):
         if self.is_staff and (self.is_captain or self.is_goalie):
-            raise ValidationError('Team staff cannot be a captain '
-                                  'or goalkeeper.')
+            raise ValidationError("Team staff cannot be a captain " "or goalkeeper.")
 
     def validate_unique(self, exclude=None):
         if self.number is not None:
-            if Player.objects.exclude(id=self.id).filter(
-                    number=self.number, team=self.team
-            ).exists():
+            if (
+                Player.objects.exclude(id=self.id)
+                .filter(number=self.number, team=self.team)
+                .exists()
+            ):
                 raise ValidationError(
-                    'This team already has a player #{}'.format(self.number))
+                    "This team already has a player #{}".format(self.number)
+                )
         super(Player, self).validate_unique(exclude=exclude)
 
 
 class Competition(models.Model):
 
-    assoc = models.CharField(max_length=150, blank=True,
-                             help_text='Administering association')
-    comp = models.CharField(max_length=200, blank=False,
-                            help_text='Competition name')
+    assoc = models.CharField(
+        max_length=150, blank=True, help_text="Administering association"
+    )
+    comp = models.CharField(max_length=200, blank=False, help_text="Competition name")
 
     def __str__(self):
-        return '{}{}'.format(
-            self.comp,
-            ' ({})'.format(self.assoc) if self.assoc else ''
+        return "{}{}".format(
+            self.comp, " ({})".format(self.assoc) if self.assoc else ""
         )
 
 
 class Division(models.Model):
     class Meta:
-        unique_together = ('comp', 'div')
+        unique_together = ("comp", "div")
 
     comp = models.ForeignKey(Competition, on_delete=models.CASCADE)
     div = models.CharField(max_length=1, choices=DIVISIONS)
@@ -213,8 +227,9 @@ class Division(models.Model):
     active = models.BooleanField(default=True)
 
     def __str__(self):
-        return '{} {}'.format(
-            self.comp, self.get_div_display(),
+        return "{} {}".format(
+            self.comp,
+            self.get_div_display(),
         )
 
 
@@ -224,6 +239,3 @@ class Venue(models.Model):
 
     def __str__(self):
         return self.venue_name
-
-
-

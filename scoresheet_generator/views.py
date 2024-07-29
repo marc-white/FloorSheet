@@ -10,6 +10,7 @@ import openpyxl.drawing
 from . import forms, writer, create_pdf_from_xlsx
 from django.forms import formset_factory
 from django.contrib.staticfiles import finders
+
 # from django.core.files.base import ContentFile
 # from django.core.files.storage import default_storage
 from django.shortcuts import redirect
@@ -18,19 +19,24 @@ from django.conf import settings
 from pdfrw import PdfWriter, IndirectPdfDict, PdfReader, PdfObject, PdfDict
 import openpyxl
 from openpyxl_image_loader import SheetImageLoader
+
 SHEET_IMAGE_LOCATIONS = {
-    "Record": ["A2", ],
-    "Completion": ["A1", ], 
+    "Record": [
+        "A2",
+    ],
+    "Completion": [
+        "A1",
+    ],
 }
 SHEET_IMAGE_SIZES = {
     "Record": {
-        "width": 67-2,
-        "height": 56-2,
+        "width": 67 - 2,
+        "height": 56 - 2,
     },
     "Completion": {
-        "width": 82-2,
-        "height": 76-2,
-    }
+        "width": 82 - 2,
+        "height": 76 - 2,
+    },
 }
 CONVERTED_PDF_SIZE_LIMIT = 250
 
@@ -40,10 +46,10 @@ from django.conf import settings
 
 
 def generate(request):
-    
+
     ss_formset = formset_factory(forms.ScoresheetGeneratorForm, extra=5)
 
-    if request.method == 'POST':
+    if request.method == "POST":
 
         fmt = request.POST.get("create")
 
@@ -53,13 +59,16 @@ def generate(request):
             fmt = "xlsx"
 
         if fmt == "pdf":
-            template_path = finders.find('scoresheet_generator/pdf/'
-                                        'IFF-Match-Record-2022-Temp-Form-MVP3'
-                                        '.pdf')
+            template_path = finders.find(
+                "scoresheet_generator/pdf/"
+                "IFF-Match-Record-2022-Temp-Form-MVP3"
+                ".pdf"
+            )
             writer_func = writer.create_scoresheet_pdf
         elif fmt == "xlsx":
-            template_path = finders.find('scoresheet_generator/xlsx/'
-                                        'IFFMatchRecord2022_blank.xlsx')
+            template_path = finders.find(
+                "scoresheet_generator/xlsx/" "IFFMatchRecord2022_blank.xlsx"
+            )
             writer_func = writer.create_scoresheet_xlsx
         else:
             raise ValueError(f"Format {fmt} is unknown")
@@ -73,18 +82,22 @@ def generate(request):
                 if form.is_valid() and form.has_changed():
                     template = writer_func(
                         template_path,
-                        comp=form.cleaned_data.get('comp'),
-                        start_time=form.cleaned_data.get('start_time'),
-                        match_id=form.cleaned_data.get('match_id'),
-                        home_team=form.cleaned_data.get('home_team'),
-                        away_team=form.cleaned_data.get('away_team'),
-                        duty_team=form.cleaned_data.get('duty_team'),
-                        venue=form.cleaned_data.get('venue'),
+                        comp=form.cleaned_data.get("comp"),
+                        start_time=form.cleaned_data.get("start_time"),
+                        match_id=form.cleaned_data.get("match_id"),
+                        home_team=form.cleaned_data.get("home_team"),
+                        away_team=form.cleaned_data.get("away_team"),
+                        duty_team=form.cleaned_data.get("duty_team"),
+                        venue=form.cleaned_data.get("venue"),
                     )
-                    if start_date is None or start_date > form.cleaned_data.get('start_time'):
-                        start_date = form.cleaned_data.get('start_time')
-                    if end_date is None or end_date < form.cleaned_data.get('start_time'):
-                        end_date = form.cleaned_data.get('start_time')
+                    if start_date is None or start_date > form.cleaned_data.get(
+                        "start_time"
+                    ):
+                        start_date = form.cleaned_data.get("start_time")
+                    if end_date is None or end_date < form.cleaned_data.get(
+                        "start_time"
+                    ):
+                        end_date = form.cleaned_data.get("start_time")
                     # p = os.path.join(
                     #     settings.MEDIA_ROOT,
                     #     '{}{}_{}-v-{}.{}'.format(
@@ -102,7 +115,7 @@ def generate(request):
                     sheets.append(template)
 
             # Merge the individual sheets into a master file
-            # (easier file handling, and uses less API hits for 
+            # (easier file handling, and uses less API hits for
             #  converting XSLX->PDF via Adobe APIs)
             if start_date is None or end_date is None:
                 output_fn = f"sheets_generated_at_{datetime.datetime.now().strftime('%Y-%m-%d-%H%M')}.{fmt}"
@@ -120,7 +133,7 @@ def generate(request):
                         output_pdf.addpage(page)
                 output_pdf.write(output_fn_full)
                 # print("Attempting redirect to %s", '/'.join(output_fn_full.split(os.sep)[-2:]))
-            
+
             if fmt == "xlsx":
                 output_wb = openpyxl.reader.excel.load_workbook(template_path)
                 sheet_names_orig = output_wb.get_sheet_names()
@@ -137,19 +150,19 @@ def generate(request):
                         filled_sheet = sheet[sheet_name]
                         blank_sheet = output_wb[
                             f"{sheet_name}{i+1}" if i != 0 else sheet_name
-                            ]
+                        ]
                         mr = filled_sheet.max_row
                         mc = filled_sheet.max_column
 
-                        for r in range(1, mr+1):
-                            for c in range(1, mc+1):
+                        for r in range(1, mr + 1):
+                            for c in range(1, mc + 1):
                                 try:
                                     blank_sheet.cell(
                                         row=r, column=c
-                                        ).value = filled_sheet.cell(row=r, column=c).value
-                                    blank_sheet.cell(
-                                        row=r, column=c
-                                    ).fill = copy.copy(filled_sheet.cell(row=r, column=c).fill)
+                                    ).value = filled_sheet.cell(row=r, column=c).value
+                                    blank_sheet.cell(row=r, column=c).fill = copy.copy(
+                                        filled_sheet.cell(row=r, column=c).fill
+                                    )
                                 except AttributeError:  # Merged cell, ignore
                                     pass
                         if i != 0:
@@ -159,13 +172,15 @@ def generate(request):
                                 im.height = SHEET_IMAGE_SIZES[sheet_name]["height"]
                                 im.width = SHEET_IMAGE_SIZES[sheet_name]["width"]
                                 blank_sheet.add_image(im, im_pos)
-                
+
                 output_wb.save(output_fn_full)
 
                 if convert_xlsx:
-                    output_fn_full = create_pdf_from_xlsx.create_pdf_from_xlsx(output_fn_full)
+                    output_fn_full = create_pdf_from_xlsx.create_pdf_from_xlsx(
+                        output_fn_full
+                    )
 
-                    # The Adobe API sometimes includes blank pages in its return. We can 
+                    # The Adobe API sometimes includes blank pages in its return. We can
                     # identify and eliminate these by looking at
                     # page.Contents["/Length"] and deleting pages below a certain limit
                     converted_pdf = PdfReader(output_fn_full)
@@ -175,9 +190,7 @@ def generate(request):
                             final_pdf.addpage(page)
                     final_pdf.write(output_fn_full)
 
-
-            return redirect('/'.join(output_fn_full.split(os.sep)[-2:]))
-
+            return redirect("/".join(output_fn_full.split(os.sep)[-2:]))
 
             # Make and serve a zip of these
             # zip_name = 'sheets_made_at_' + datetime.datetime.now().strftime('%Y-%m-%d-%H%M') + '.zip'
@@ -187,8 +200,10 @@ def generate(request):
             # print("Zip complete!")
             # return redirect('/'.join(zip_path.split(os.sep)[-2:]))
 
-    return render(request, 'scoresheet_generator/generator.html',
-                  {
-                      'ss_formset': ss_formset,
-                  })
-
+    return render(
+        request,
+        "scoresheet_generator/generator.html",
+        {
+            "ss_formset": ss_formset,
+        },
+    )

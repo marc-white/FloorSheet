@@ -5,4 +5,4 @@ from django.apps import AppConfig
 
 
 class ScoresheetGeneratorConfig(AppConfig):
-    name = 'scoresheet_generator'
+    name = "scoresheet_generator"
