@@ -6,9 +6,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.files.storage import DefaultStorage
 from django.core.exceptions import ValidationError
 
-# from . import writer
 import csv
-import codecs
 import datetime
 
 # Create your models here.
