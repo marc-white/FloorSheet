@@ -124,7 +124,7 @@ def parse_team_list(team_obj, game_date=None):
             data_dict["PlayerGC{}".format(no)] += "C"
         if player.is_goalie:
             data_dict["PlayerGC{}".format(no)] += "G"
-        if player.number is not None:
+        if player.number is not None and int(player.number) != 0:
             data_dict["PlayerNo{}".format(no)] = str(player.number) or ""
         else:
             data_dict["PlayerNo{}".format(no)] = ""
