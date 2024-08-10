@@ -69,7 +69,9 @@ class Team(models.Model):
     # Model fields
     team_name = models.CharField(max_length=100, blank=False, unique=False)
     color = models.CharField(max_length=30, blank=True)
-    team_list = models.FileField(blank=True)
+    team_list = models.FileField(blank=True,
+                                 help_text="WARNING: uploading a team list " 
+                                           "will remove all existing players!")
 
     def __init__(self, *args, **kwargs):
         super(Team, self).__init__(*args, **kwargs)
@@ -105,7 +107,7 @@ class Team(models.Model):
 
         data_dict = {}
 
-        print(rows)
+        # print(rows)
 
         data_dict["players"] = [
             row for row in rows if not any([_ in row["role"] for _ in STAFF_ROLE_KEY])
@@ -116,6 +118,20 @@ class Team(models.Model):
             row for row in rows if any([_ in row["role"] for _ in STAFF_ROLE_KEY])
         ][:5]
         data_dict["staff"].sort(key=lambda x: try_int_or_other(x["number"], 0))
+
+        # Check the data dict for:
+        # - Players or team staff with duplicate numbers - set to blank
+        # - Players or team staff with number 0 - set to blank
+        used_numbers = []
+        for player in data_dict["players"]:
+            if player["number"] == "0":
+                player["number"] = ""
+            if player["number"] != "":
+                no = int(player["number"])
+                if no in used_numbers:
+                    raise ValidationError(f"CSV issue - number {no} already used")
+                else:
+                    used_numbers.append(no)
 
         return data_dict
 
